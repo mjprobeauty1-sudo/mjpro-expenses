@@ -145,7 +145,10 @@ tbody tr:hover td{background:#FAFAF8}
 <div class="page-wrap">
   <div class="flex-between" style="margin-bottom:18px">
     <div class="page-title" style="margin-bottom:0">报销记录</div>
-    <button class="btn btn-sm" onclick="openStaffModal()"><i class="ti ti-users"></i> 员工管理</button>
+    <div class="flex-row" style="gap:6px">
+      <button class="btn btn-sm" id="admin-toggle-btn" onclick="toggleAdmin()"><i class="ti ti-lock"></i> 员工模式</button>
+      <button class="btn btn-sm" onclick="openStaffModal()"><i class="ti ti-users"></i> 员工管理</button>
+    </div>
   </div>
 
   <div class="stats-grid">
@@ -219,6 +222,28 @@ tbody tr:hover td{background:#FAFAF8}
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('expense-detail-modal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 管理员验证 ════ -->
+<div class="modal-overlay" id="admin-modal">
+  <div class="modal" style="width:380px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-lock" style="color:var(--accent)"></i> 需要管理员权限</div>
+      <button class="icon-btn" onclick="cancelAdminPrompt()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">请输入管理员密码</label>
+        <input class="form-input" type="password" id="admin-pw-input" placeholder="密码" onkeydown="if(event.key==='Enter')submitAdminPassword()">
+        <div id="admin-pw-error" style="display:none;font-size:12px;color:var(--red);margin-top:6px">密码不正确，请重试</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3)">审批、删除、清空、员工管理需要管理员权限。解锁后本次浏览期间不用重复输入。</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cancelAdminPrompt()">取消</button>
+      <button class="btn btn-accent" onclick="submitAdminPassword()"><i class="ti ti-check"></i> 确认</button>
     </div>
   </div>
 </div>
@@ -330,6 +355,56 @@ function toast(msg,type){
 }
 function staffById(id){return staff.find(s=>s.id===id);}
 
+/* ============ 管理员权限 ============ */
+// 想改密码就改这一行（改完记得重新上传到 GitHub）
+const ADMIN_PASSWORD='mjpro-admin-2026';
+let isAdmin=false;
+let pendingAdminAction=null;
+function updateAdminUI(){
+  const btn=document.getElementById('admin-toggle-btn');
+  if(!btn)return;
+  btn.innerHTML=isAdmin
+    ?'<i class="ti ti-lock-open"></i> 管理员模式'
+    :'<i class="ti ti-lock"></i> 员工模式';
+  btn.classList.toggle('btn-accent',isAdmin);
+}
+function requireAdmin(fn){
+  if(isAdmin){fn();return;}
+  pendingAdminAction=fn;
+  document.getElementById('admin-pw-input').value='';
+  document.getElementById('admin-pw-error').style.display='none';
+  showModalEl('admin-modal');
+  setTimeout(()=>document.getElementById('admin-pw-input').focus(),50);
+}
+function submitAdminPassword(){
+  const val=document.getElementById('admin-pw-input').value;
+  if(val!==ADMIN_PASSWORD){
+    document.getElementById('admin-pw-error').style.display='block';
+    return;
+  }
+  isAdmin=true;
+  try{sessionStorage.setItem('mjpro_admin','1');}catch(e){}
+  closeModal('admin-modal');
+  updateAdminUI();
+  toast('已解锁管理员权限','success');
+  const fn=pendingAdminAction;pendingAdminAction=null;
+  if(fn)fn();
+}
+function cancelAdminPrompt(){
+  pendingAdminAction=null;
+  closeModal('admin-modal');
+}
+function toggleAdmin(){
+  if(isAdmin){
+    isAdmin=false;
+    try{sessionStorage.removeItem('mjpro_admin');}catch(e){}
+    updateAdminUI();
+    toast('已退出管理员模式','warn');
+  }else{
+    requireAdmin(()=>{});
+  }
+}
+
 /* ============ Staff management ============ */
 let editingStaffId=null;
 const staffColors=['av-accent','av-purple','av-teal','av-green'];
@@ -340,8 +415,10 @@ function generateStaffId(name){
   return id;
 }
 function openStaffModal(){
-  renderStaffTable();
-  showModalEl('staff-modal');
+  requireAdmin(()=>{
+    renderStaffTable();
+    showModalEl('staff-modal');
+  });
 }
 function renderStaffTable(){
   const tbody=document.getElementById('tbody-staff');
@@ -429,18 +506,22 @@ function updateExpenseStats(){
   document.getElementById('exp-stat-approved').textContent=money(approved);
   document.getElementById('exp-stat-rejected').textContent=rejected+' 项';
 }
-function approveExpense(id){const e=expenses.find(x=>x.id===id);if(e){e.status='已批准';saveStore();renderExpenseTable();toast('已批准报销','success');}}
-function rejectExpense(id){const e=expenses.find(x=>x.id===id);if(e){e.status='已拒绝';saveStore();renderExpenseTable();toast('已拒绝报销','warn');}}
+function approveExpense(id){requireAdmin(()=>{const e=expenses.find(x=>x.id===id);if(e){e.status='已批准';saveStore();renderExpenseTable();toast('已批准报销','success');}});}
+function rejectExpense(id){requireAdmin(()=>{const e=expenses.find(x=>x.id===id);if(e){e.status='已拒绝';saveStore();renderExpenseTable();toast('已拒绝报销','warn');}});}
 function deleteExpense(id){
-  if(!confirm('确定要删除这条报销记录吗？此操作无法撤销。'))return;
-  expenses=expenses.filter(e=>e.id!==id);
-  saveStore();renderExpenseTable();toast('已删除报销记录','warn');
+  requireAdmin(()=>{
+    if(!confirm('确定要删除这条报销记录吗？此操作无法撤销。'))return;
+    expenses=expenses.filter(e=>e.id!==id);
+    saveStore();renderExpenseTable();toast('已删除报销记录','warn');
+  });
 }
 function clearAllExpenses(){
-  if(!expenses.length){toast('目前没有报销记录','warn');return;}
-  if(!confirm('确定要清空全部 '+expenses.length+' 条报销记录吗？此操作无法撤销。'))return;
-  expenses=[];
-  saveStore();renderExpenseTable();toast('已清空全部报销记录','warn');
+  requireAdmin(()=>{
+    if(!expenses.length){toast('目前没有报销记录','warn');return;}
+    if(!confirm('确定要清空全部 '+expenses.length+' 条报销记录吗？此操作无法撤销。'))return;
+    expenses=[];
+    saveStore();renderExpenseTable();toast('已清空全部报销记录','warn');
+  });
 }
 function driveThumbnailUrl(url){
   if(!url)return '';
@@ -600,6 +681,8 @@ document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click
   }
 }));
 
+try{isAdmin=sessionStorage.getItem('mjpro_admin')==='1';}catch(e){}
+updateAdminUI();
 loadStore();
 renderExpenseTable();
 </script>
