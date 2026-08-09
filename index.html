@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>报销记录 — MJPRO Beauty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#F7F5F2;--surface:#FFFFFF;--surface2:#F0EDE8;
+  --border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.14);
+  --text:#1A1814;--text-2:#6B6760;--text-3:#A09C97;
+  --accent:#C9956A;--accent-light:#F5EBE0;--accent-dark:#A0704A;
+  --purple:#7E6FBF;--purple-light:#EEEAFC;
+  --teal:#3A9E82;--teal-light:#E0F5ED;
+  --red:#D95F3B;--red-light:#FBEEE9;
+  --amber:#C78B2A;--amber-light:#FDF3E3;
+  --green:#4E9A5C;--green-light:#E8F5EC;
+  --blue:#3B6FBF;--blue-light:#E8EFFE;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 6px 20px rgba(0,0,0,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter','Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+.page-wrap{max-width:1100px;margin:0 auto;padding:28px 24px}
+.page-title{font-size:20px;font-weight:600;margin-bottom:18px}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all 0.15s;line-height:1;white-space:nowrap}
+.btn:hover{background:var(--bg)}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent-dark)}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-green{background:var(--green);color:#fff;border-color:#3a7847}
+.btn-green:hover{background:#3a7847}
+.btn-red{background:var(--red);color:#fff;border-color:#b04d2d}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn i{font-size:15px}
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-header-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:0.03em;margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:600;letter-spacing:-0.5px;line-height:1.2}
+.stat-accent{border-left:3px solid var(--accent)}
+.stat-warn{border-left:3px solid var(--amber)}
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;text-transform:uppercase;border-bottom:1px solid var(--border);background:#FAFAF9;white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background 0.1s}
+tbody tr:hover td{background:#FAFAF8}
+/* Badges & Tags */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-green{background:var(--green-light);color:#2E7A3B}
+.badge-amber{background:var(--amber-light);color:#9A6200}
+.badge-red{background:var(--red-light);color:#B84020}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.tag-accent{background:var(--accent-light);color:var(--accent-dark)}
+.tag-purple{background:var(--purple-light);color:var(--purple)}
+.tag-teal{background:var(--teal-light);color:var(--teal)}
+.tag-gray{background:#F0EDE8;color:#6B6760}
+/* Avatar */
+.av{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.av-accent{background:var(--accent-light);color:var(--accent-dark)}
+.av-purple{background:var(--purple-light);color:var(--purple)}
+.av-teal{background:var(--teal-light);color:var(--teal)}
+.av-green{background:var(--green-light);color:var(--green)}
+/* Flex helpers */
+.flex-row{display:flex;align-items:center;gap:9px}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+/* Forms */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px;display:block}
+.form-input,.form-select{width:100%;padding:8px 11px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);font-family:inherit;transition:border-color 0.15s}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--accent)}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.32);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);width:480px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+.modal-header{padding:16px 20px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.modal-body{padding:20px}
+.modal-footer{padding:13px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--surface)}
+.form-section{font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;margin:16px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.icon-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:17px;transition:background 0.15s}
+.icon-btn:hover{background:var(--bg)}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.color-swatch.selected{border-color:var(--text)}
+.color-swatch.av-accent{background:var(--accent-light)}
+.color-swatch.av-purple{background:var(--purple-light)}
+.color-swatch.av-teal{background:var(--teal-light)}
+.color-swatch.av-green{background:var(--green-light)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+/* Toast */
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;box-shadow:var(--shadow-md);display:flex;align-items:center;gap:8px;animation:toast-in 0.2s ease-out;max-width:320px}
+.toast-success{background:var(--green)}
+.toast-warn{background:var(--amber)}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<div class="page-wrap">
+  <div class="flex-between" style="margin-bottom:18px">
+    <div class="page-title" style="margin-bottom:0">报销记录</div>
+    <button class="btn btn-sm" onclick="openStaffModal()"><i class="ti ti-users"></i> 员工管理</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card stat-accent"><div class="stat-label">本月总报销</div><div class="stat-value" id="exp-stat-total">RM 2,150</div></div>
+    <div class="stat-card stat-warn"><div class="stat-label">待审批</div><div class="stat-value" style="color:var(--amber)" id="exp-stat-pending">4 项</div></div>
+    <div class="stat-card"><div class="stat-label">已批准金额</div><div class="stat-value" id="exp-stat-approved">RM 1,650</div></div>
+    <div class="stat-card"><div class="stat-label">已拒绝</div><div class="stat-value" id="exp-stat-rejected">1 项</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-header-title"><i class="ti ti-file-dollar" style="color:var(--accent)"></i> 报销申请</span>
+      <div class="flex-row">
+        <select class="form-select" id="expense-filter" onchange="renderExpenseTable()" style="width:auto;padding:5px 10px;font-size:12px"><option value="">全部状态</option><option value="待审批">待审批</option><option value="已批准">已批准</option><option value="已拒绝">已拒绝</option></select>
+        <button class="btn btn-sm"><i class="ti ti-download"></i> 导出</button>
+        <button class="btn btn-sm btn-red" onclick="clearAllExpenses()"><i class="ti ti-trash"></i> 清空全部</button>
+        <button class="btn btn-sm btn-accent" onclick="openExpenseModal()"><i class="ti ti-plus"></i> 提交报销</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>申请人</th><th>日期</th><th>类别</th><th>描述</th><th>金额</th><th>附件</th><th>状态</th><th></th></tr></thead>
+      <tbody id="tbody-expenses"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 提交报销 ════ -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-file-dollar" style="color:var(--accent)"></i> 提交报销</div>
+      <button class="icon-btn" onclick="closeModal('expense-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">申请人</label><select class="form-select" id="exp-f-staff"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">日期</label><input class="form-input" type="date" id="exp-f-date"></div>
+        <div class="form-group"><label class="form-label">类别</label><select class="form-select" id="exp-f-category"><option>交通</option><option>材料</option><option>餐饮</option><option>办公</option><option>营销</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">描述</label><input class="form-input" id="exp-f-desc" placeholder="例：客户拜访 Grab 费用"></div>
+      <div class="form-group"><label class="form-label">金额（RM）</label><input class="form-input" type="number" id="exp-f-amount" placeholder="45"></div>
+      <div class="form-group">
+        <label class="form-label">收据 / 单据照片</label>
+        <div class="flex-row" style="gap:8px">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('exp-f-file').click()"><i class="ti ti-upload"></i> 上传照片</button>
+          <button type="button" class="btn btn-sm" onclick="openCameraCapture()"><i class="ti ti-camera"></i> 拍照</button>
+        </div>
+        <input type="file" accept="image/*" id="exp-f-file" onchange="handleExpenseFileSelect(this)" style="display:none">
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px">照片会自动上传到公司共享的 Google Drive 文件夹，方便 acc 对账</div>
+        <div id="exp-f-preview" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('expense-modal')">取消</button>
+      <button class="btn btn-accent" onclick="saveExpense()"><i class="ti ti-check"></i> 提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 报销详情 ════ -->
+<div class="modal-overlay" id="expense-detail-modal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-file-dollar" style="color:var(--accent)"></i> 报销详情</div>
+      <button class="icon-btn" onclick="closeModal('expense-detail-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 0;font-size:13px;margin-bottom:14px" id="expd-info"></div>
+      <div class="form-section">收据 / 单据照片</div>
+      <div id="expd-image"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('expense-detail-modal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 拍照 ════ -->
+<div class="modal-overlay" id="camera-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-camera" style="color:var(--accent)"></i> 拍照</div>
+      <button class="icon-btn" onclick="closeCameraCapture()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="camera-live-wrap">
+        <video id="camera-video" autoplay playsinline style="width:100%;border-radius:var(--radius-sm);background:#000"></video>
+      </div>
+      <div id="camera-shot-wrap" style="display:none">
+        <img id="camera-shot-img" style="width:100%;border-radius:var(--radius-sm)">
+      </div>
+      <canvas id="camera-canvas" style="display:none"></canvas>
+      <div id="camera-error" style="display:none;font-size:12px;color:var(--red);margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="camera-retake-btn" style="display:none" onclick="retakePhoto()"><i class="ti ti-refresh"></i> 重拍</button>
+      <button class="btn" onclick="closeCameraCapture()">取消</button>
+      <button class="btn btn-accent" id="camera-shoot-btn" onclick="capturePhoto()"><i class="ti ti-camera"></i> 拍照</button>
+      <button class="btn btn-accent" id="camera-use-btn" style="display:none" onclick="useCapturedPhoto()"><i class="ti ti-check"></i> 使用这张</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 员工管理 ════ -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-users" style="color:var(--accent)"></i> 员工管理</div>
+      <button class="icon-btn" onclick="closeModal('staff-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>员工</th><th>职级</th><th></th></tr></thead>
+        <tbody id="tbody-staff"></tbody>
+      </table></div>
+      <button class="btn btn-sm btn-accent" style="margin-top:12px" onclick="openStaffFormModal(null)"><i class="ti ti-plus"></i> 新增员工</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('staff-modal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: 新增/编辑员工 ════ -->
+<div class="modal-overlay" id="staff-form-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-user-edit" style="color:var(--accent)"></i> <span id="staff-form-title">新增员工</span></div>
+      <button class="icon-btn" onclick="closeModal('staff-form-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">姓名</label><input class="form-input" id="staff-f-name" placeholder="例：Jenny Lim"></div>
+      <div class="form-group"><label class="form-label">职级</label><input class="form-input" id="staff-f-level" placeholder="例：高级技师"></div>
+      <div class="form-group"><label class="form-label">头像颜色</label>
+        <div class="flex-row" id="staff-f-color" style="gap:8px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('staff-form-modal')">取消</button>
+      <button class="btn btn-accent" onclick="saveStaffMember()"><i class="ti ti-check"></i> 保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let staff=[
+  {id:'AT',name:'Annie Ten',avClass:'av-accent',level:'高级技师',commissionPct:0},
+  {id:'CY',name:'Chai Yan Lin',avClass:'av-purple',level:'后台',commissionPct:0},
+  {id:'CE',name:'Chia En Lin',avClass:'av-teal',level:'初级技师',commissionPct:0},
+  {id:'MI',name:'Minna',avClass:'av-green',level:'销售',commissionPct:0},
+  {id:'MJ',name:'Miao Jun',avClass:'av-accent',level:'Director',commissionPct:0}
+];
+
+let expenses=[];
+
+/* ============ Persistence (scoped to this standalone page only) ============ */
+const STORAGE_KEY='mjpro_expense_claim_data_v1';
+function saveStore(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({expenses,staff}));}catch(e){}
+}
+function loadStore(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    if(d.expenses)expenses=d.expenses;
+    if(d.staff)staff=d.staff;
+  }catch(e){}
+}
+
+/* ============ Helpers ============ */
+function money(n){return 'RM '+Math.round(n||0).toLocaleString('en-US');}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+function todayShort(){const d=new Date();return String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');}
+function toast(msg,type){
+  const wrap=document.getElementById('toast-wrap');if(!wrap)return;
+  const el=document.createElement('div');
+  el.className='toast'+(type?' toast-'+type:'');
+  el.innerHTML=`<i class="ti ti-${type==='success'?'check':type==='warn'?'alert-triangle':'info-circle'}"></i><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity 0.3s';el.style.opacity='0';setTimeout(()=>el.remove(),300);},2800);
+}
+function staffById(id){return staff.find(s=>s.id===id);}
+
+/* ============ Staff management ============ */
+let editingStaffId=null;
+const staffColors=['av-accent','av-purple','av-teal','av-green'];
+function generateStaffId(name){
+  const base=(name.match(/[A-Za-z一-龥]/g)||[]).slice(0,2).join('').toUpperCase()||'ST';
+  let id=base,n=2;
+  while(staff.find(s=>s.id===id)){id=base+n;n++;}
+  return id;
+}
+function openStaffModal(){
+  renderStaffTable();
+  showModalEl('staff-modal');
+}
+function renderStaffTable(){
+  const tbody=document.getElementById('tbody-staff');
+  tbody.innerHTML=staff.map(s=>`<tr>
+    <td><div class="flex-row"><div class="av ${s.avClass}" style="width:26px;height:26px;font-size:10px">${s.id}</div>${s.name}</div></td>
+    <td>${s.level}</td>
+    <td><div class="flex-row" style="gap:4px">
+      <button class="btn btn-sm" onclick="openStaffFormModal('${s.id}')"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm btn-red" onclick="deleteStaffMember('${s.id}')"><i class="ti ti-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+  const expSelect=document.getElementById('exp-f-staff');
+  if(expSelect)expSelect.innerHTML=staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+function openStaffFormModal(id){
+  editingStaffId=id;
+  const s=id?staff.find(x=>x.id===id):null;
+  document.getElementById('staff-form-title').textContent=s?('编辑员工 — '+s.name):'新增员工';
+  document.getElementById('staff-f-name').value=s?s.name:'';
+  document.getElementById('staff-f-level').value=s?s.level:'';
+  const colorWrap=document.getElementById('staff-f-color');
+  const activeColor=s?s.avClass:staffColors[0];
+  colorWrap.innerHTML=staffColors.map(c=>`<div class="color-swatch ${c}${c===activeColor?' selected':''}" data-color="${c}" onclick="selectStaffColor('${c}')"></div>`).join('');
+  showModalEl('staff-form-modal');
+}
+function selectStaffColor(c){
+  document.querySelectorAll('#staff-f-color .color-swatch').forEach(el=>el.classList.toggle('selected',el.dataset.color===c));
+}
+function getSelectedStaffColor(){
+  const sel=document.querySelector('#staff-f-color .color-swatch.selected');
+  return sel?sel.dataset.color:staffColors[0];
+}
+function saveStaffMember(){
+  const name=document.getElementById('staff-f-name').value.trim();
+  if(!name){toast('请填写姓名','warn');return;}
+  const data={
+    name,
+    level:document.getElementById('staff-f-level').value.trim()||'员工',
+    commissionPct:0,
+    avClass:getSelectedStaffColor()
+  };
+  if(editingStaffId){
+    Object.assign(staff.find(s=>s.id===editingStaffId),data);
+  }else{
+    staff.push(Object.assign({id:generateStaffId(name)},data));
+  }
+  saveStore();renderStaffTable();closeModal('staff-form-modal');toast('员工信息已保存','success');
+}
+function deleteStaffMember(id){
+  staff=staff.filter(s=>s.id!==id);
+  saveStore();renderStaffTable();renderExpenseTable();toast('已删除员工','warn');
+}
+function showModalEl(id){const m=document.getElementById(id);if(m)m.classList.add('open');}
+function closeModal(id){const m=document.getElementById(id);if(m)m.classList.remove('open');}
+
+/* ============ Expenses ============ */
+function renderExpenseTable(){
+  const tbody=document.getElementById('tbody-expenses');
+  if(!tbody)return;
+  const filter=document.getElementById('expense-filter').value;
+  const list=expenses.filter(e=>!filter||e.status===filter);
+  tbody.innerHTML=list.map(e=>{
+    const s=staffById(e.staffId);
+    const rowBg=e.status==='待审批'?' style="background:#FFFBF5"':e.status==='已拒绝'?' style="background:#FEF6F4"':'';
+    const catTag={交通:'tag-teal',材料:'tag-purple',餐饮:'tag-teal',办公:'tag-gray',营销:'tag-accent'}[e.category]||'tag-gray';
+    const statusBadge=e.status==='已批准'?'<span class="badge badge-green">已批准</span>':e.status==='已拒绝'?'<span class="badge badge-red">已拒绝</span>':'<span class="badge badge-amber">待审批</span>';
+    const deleteBtn=`<button class="btn btn-sm btn-red" onclick="deleteExpense('${e.id}')" title="删除"><i class="ti ti-trash"></i></button>`;
+    const actionHtml=e.status==='待审批'
+      ?`<div class="flex-row" style="gap:4px"><button class="btn btn-sm btn-green" onclick="approveExpense('${e.id}')"><i class="ti ti-check"></i></button><button class="btn btn-sm btn-red" onclick="rejectExpense('${e.id}')"><i class="ti ti-x"></i></button>${deleteBtn}</div>`
+      :`<div class="flex-row" style="gap:4px"><button class="btn btn-sm" onclick="viewExpense('${e.id}')">查看</button>${deleteBtn}</div>`;
+    const attachmentHtml=e.attachmentUrl
+      ?`<i class="ti ti-photo" style="color:var(--accent);cursor:pointer" onclick="viewExpense('${e.id}')" title="查看附件"></i>`
+      :`<i class="ti ti-file" style="color:var(--text-3)"></i>`;
+    return `<tr${rowBg}><td><div class="flex-row"><div class="av ${s?s.avClass:''}" style="width:24px;height:24px;font-size:10px">${e.staffId}</div>${s?s.name:e.staffId}</div></td><td style="font-size:12px;color:var(--text-3)">${e.date}</td><td><span class="tag ${catTag}">${e.category}</span></td><td>${e.desc}</td><td>${money(e.amount)}</td><td>${attachmentHtml}</td><td>${statusBadge}</td><td>${actionHtml}</td></tr>`;
+  }).join('');
+  updateExpenseStats();
+}
+function updateExpenseStats(){
+  const total=expenses.reduce((a,e)=>a+e.amount,0);
+  const pending=expenses.filter(e=>e.status==='待审批');
+  const approved=expenses.filter(e=>e.status==='已批准').reduce((a,e)=>a+e.amount,0);
+  const rejected=expenses.filter(e=>e.status==='已拒绝').length;
+  document.getElementById('exp-stat-total').textContent=money(total);
+  document.getElementById('exp-stat-pending').textContent=pending.length+' 项';
+  document.getElementById('exp-stat-approved').textContent=money(approved);
+  document.getElementById('exp-stat-rejected').textContent=rejected+' 项';
+}
+function approveExpense(id){const e=expenses.find(x=>x.id===id);if(e){e.status='已批准';saveStore();renderExpenseTable();toast('已批准报销','success');}}
+function rejectExpense(id){const e=expenses.find(x=>x.id===id);if(e){e.status='已拒绝';saveStore();renderExpenseTable();toast('已拒绝报销','warn');}}
+function deleteExpense(id){
+  if(!confirm('确定要删除这条报销记录吗？此操作无法撤销。'))return;
+  expenses=expenses.filter(e=>e.id!==id);
+  saveStore();renderExpenseTable();toast('已删除报销记录','warn');
+}
+function clearAllExpenses(){
+  if(!expenses.length){toast('目前没有报销记录','warn');return;}
+  if(!confirm('确定要清空全部 '+expenses.length+' 条报销记录吗？此操作无法撤销。'))return;
+  expenses=[];
+  saveStore();renderExpenseTable();toast('已清空全部报销记录','warn');
+}
+function driveThumbnailUrl(url){
+  if(!url)return '';
+  const m=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)||url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m?`https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`:url;
+}
+const DRIVE_UPLOAD_URL='https://script.google.com/macros/s/AKfycbw1L5JoipdIjKCA7i-LYo0_LZ9bXb22cvnugdjRkQU9-z6YBIHlDec4nnoVJlZORALr_Q/exec';
+const DRIVE_UPLOAD_SECRET='mjpro-2026-xk9';
+let pendingAttachmentUrl=null;
+let attachmentUploading=false;
+function openExpenseModal(){
+  document.getElementById('exp-f-staff').innerHTML=staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('exp-f-date').value=todayISO();
+  document.getElementById('exp-f-desc').value='';
+  document.getElementById('exp-f-amount').value='';
+  document.getElementById('exp-f-file').value='';
+  document.getElementById('exp-f-preview').innerHTML='';
+  pendingAttachmentUrl=null;
+  attachmentUploading=false;
+  showModalEl('expense-modal');
+}
+function handleExpenseFileSelect(inputEl){
+  const input=inputEl||document.getElementById('exp-f-file');
+  const file=input.files&&input.files[0];
+  if(!file){document.getElementById('exp-f-preview').innerHTML='';pendingAttachmentUrl=null;return;}
+  uploadExpenseFile(file);
+}
+function uploadExpenseFile(file){
+  const preview=document.getElementById('exp-f-preview');
+  pendingAttachmentUrl=null;
+  if(!file.type.startsWith('image/')){toast('请选择图片文件','warn');return;}
+  if(file.size>5*1024*1024){toast('图片过大，请选择 5MB 以内的图片','warn');return;}
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const dataUrl=ev.target.result;
+    const base64=dataUrl.split(',')[1];
+    preview.innerHTML=`<div class="flex-row" style="gap:8px"><img src="${dataUrl}" style="max-width:80px;max-height:80px;border-radius:var(--radius-sm);border:1px solid var(--border)"><span style="font-size:12px;color:var(--text-3)"><i class="ti ti-loader-2"></i> 正在上传到 Google Drive…</span></div>`;
+    attachmentUploading=true;
+    fetch(DRIVE_UPLOAD_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({secret:DRIVE_UPLOAD_SECRET,filename:file.name,mimeType:file.type,data:base64})
+    }).then(r=>r.json()).then(res=>{
+      attachmentUploading=false;
+      if(res.ok){
+        pendingAttachmentUrl=res.url;
+        preview.innerHTML=`<div class="flex-row" style="gap:8px"><img src="${dataUrl}" style="max-width:80px;max-height:80px;border-radius:var(--radius-sm);border:1px solid var(--border)"><span style="font-size:12px;color:var(--green)"><i class="ti ti-check"></i> 已上传到 Google Drive</span></div>`;
+      }else{
+        preview.innerHTML=`<span style="font-size:12px;color:var(--red)">上传失败：${res.error||'未知错误'}</span>`;
+        toast('上传失败：'+(res.error||'未知错误'),'warn');
+      }
+    }).catch(()=>{
+      attachmentUploading=false;
+      preview.innerHTML=`<span style="font-size:12px;color:var(--red)">上传失败，请检查网络</span>`;
+      toast('上传失败，请检查网络','warn');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ============ Camera capture (getUserMedia — works with a desktop webcam or phone camera) ============ */
+let cameraStream=null;
+function openCameraCapture(){
+  const video=document.getElementById('camera-video');
+  document.getElementById('camera-error').style.display='none';
+  document.getElementById('camera-live-wrap').style.display='block';
+  document.getElementById('camera-shot-wrap').style.display='none';
+  document.getElementById('camera-shoot-btn').style.display='';
+  document.getElementById('camera-retake-btn').style.display='none';
+  document.getElementById('camera-use-btn').style.display='none';
+  showModalEl('camera-modal');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showCameraError('这个浏览器不支持拍照，请用「上传照片」代替');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
+    .then(stream=>{
+      cameraStream=stream;
+      video.srcObject=stream;
+    })
+    .catch(err=>{
+      showCameraError('无法打开摄像头（'+err.message+'），请检查浏览器摄像头权限，或改用「上传照片」');
+    });
+}
+function showCameraError(msg){
+  const el=document.getElementById('camera-error');
+  el.textContent=msg;
+  el.style.display='block';
+  document.getElementById('camera-shoot-btn').style.display='none';
+}
+function stopCameraStream(){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+}
+function closeCameraCapture(){
+  stopCameraStream();
+  closeModal('camera-modal');
+}
+function capturePhoto(){
+  const video=document.getElementById('camera-video');
+  if(!video.videoWidth){toast('摄像头还没准备好，请稍候','warn');return;}
+  const canvas=document.getElementById('camera-canvas');
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  document.getElementById('camera-shot-img').src=canvas.toDataURL('image/jpeg',0.9);
+  document.getElementById('camera-live-wrap').style.display='none';
+  document.getElementById('camera-shot-wrap').style.display='block';
+  document.getElementById('camera-shoot-btn').style.display='none';
+  document.getElementById('camera-retake-btn').style.display='';
+  document.getElementById('camera-use-btn').style.display='';
+}
+function retakePhoto(){
+  document.getElementById('camera-live-wrap').style.display='block';
+  document.getElementById('camera-shot-wrap').style.display='none';
+  document.getElementById('camera-shoot-btn').style.display='';
+  document.getElementById('camera-retake-btn').style.display='none';
+  document.getElementById('camera-use-btn').style.display='none';
+}
+function useCapturedPhoto(){
+  const canvas=document.getElementById('camera-canvas');
+  canvas.toBlob(blob=>{
+    const file=new File([blob],'camera-'+Date.now()+'.jpg',{type:'image/jpeg'});
+    closeCameraCapture();
+    uploadExpenseFile(file);
+  },'image/jpeg',0.9);
+}
+function saveExpense(){
+  if(attachmentUploading){toast('图片还在上传中，请稍候','warn');return;}
+  const amount=Number(document.getElementById('exp-f-amount').value);
+  if(!amount){toast('请填写金额','warn');return;}
+  const dateVal=document.getElementById('exp-f-date').value;
+  expenses.unshift({
+    id:'exp'+Date.now(),
+    staffId:document.getElementById('exp-f-staff').value,
+    date:dateVal?dateVal.slice(5).replace('-','.'):todayShort(),
+    category:document.getElementById('exp-f-category').value,
+    desc:document.getElementById('exp-f-desc').value.trim()||'—',
+    amount,status:'待审批',attachmentUrl:pendingAttachmentUrl
+  });
+  saveStore();renderExpenseTable();closeModal('expense-modal');toast('报销已提交，等待审批','success');
+}
+function viewExpense(id){
+  const e=expenses.find(x=>x.id===id);if(!e)return;
+  const s=staffById(e.staffId);
+  const statusText={已批准:'已批准',已拒绝:'已拒绝',待审批:'待审批'}[e.status]||e.status;
+  document.getElementById('expd-info').innerHTML=`<span style="color:var(--text-3)">申请人</span><span>${s?s.name:e.staffId}</span><span style="color:var(--text-3)">日期</span><span>${e.date}</span><span style="color:var(--text-3)">类别</span><span>${e.category}</span><span style="color:var(--text-3)">描述</span><span>${e.desc}</span><span style="color:var(--text-3)">金额</span><span style="font-weight:600;color:var(--accent)">${money(e.amount)}</span><span style="color:var(--text-3)">状态</span><span>${statusText}</span>`;
+  document.getElementById('expd-image').innerHTML=e.attachmentUrl
+    ?`<img src="${driveThumbnailUrl(e.attachmentUrl)}" style="max-width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:10px" onerror="this.style.display='none'"><a href="${e.attachmentUrl}" target="_blank" rel="noopener" class="btn btn-sm"><i class="ti ti-external-link"></i> 在 Google Drive 中打开</a>`
+    :`<div style="font-size:13px;color:var(--text-3);background:var(--bg);padding:16px;border-radius:var(--radius-sm);text-align:center">暂无附件</div>`;
+  showModalEl('expense-detail-modal');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){
+  if(e.target===this){
+    if(this.id==='camera-modal')stopCameraStream();
+    this.classList.remove('open');
+  }
+}));
+
+loadStore();
+renderExpenseTable();
+</script>
+</body>
+</html>
