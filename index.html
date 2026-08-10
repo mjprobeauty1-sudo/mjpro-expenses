@@ -197,13 +197,13 @@ tbody tr:hover td{background:#FAFAF8}
           <button type="button" class="btn btn-sm" onclick="openCameraCapture()"><i class="ti ti-camera"></i> 拍照</button>
         </div>
         <input type="file" accept="image/*" id="exp-f-file" onchange="handleExpenseFileSelect(this)" style="display:none">
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px">照片会自动上传到公司共享的 Google Drive 文件夹，方便 acc 对账</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px">按下「提交」后，照片才会上传到公司共享的 Google Drive 文件夹，方便 acc 对账</div>
         <div id="exp-f-preview" style="margin-top:8px"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('expense-modal')">取消</button>
-      <button class="btn btn-accent" onclick="saveExpense()"><i class="ti ti-check"></i> 提交</button>
+      <button class="btn btn-accent" id="exp-submit-btn" onclick="saveExpense()"><i class="ti ti-check"></i> 提交</button>
     </div>
   </div>
 </div>
@@ -530,56 +530,77 @@ function driveThumbnailUrl(url){
 }
 const DRIVE_UPLOAD_URL='https://script.google.com/macros/s/AKfycbw1L5JoipdIjKCA7i-LYo0_LZ9bXb22cvnugdjRkQU9-z6YBIHlDec4nnoVJlZORALr_Q/exec';
 const DRIVE_UPLOAD_SECRET='mjpro-2026-xk9';
-let pendingAttachmentUrl=null;
-let attachmentUploading=false;
+// 照片先暂存在本地，按下「提交」时才真正上传到 Drive
+let stagedPhotoName=null;
+let stagedPhotoType=null;
+let stagedPhotoDataUrl=null;
+let isSubmitting=false;
 function openExpenseModal(){
   document.getElementById('exp-f-staff').innerHTML=staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   document.getElementById('exp-f-date').value=todayISO();
   document.getElementById('exp-f-desc').value='';
   document.getElementById('exp-f-amount').value='';
   document.getElementById('exp-f-file').value='';
-  document.getElementById('exp-f-preview').innerHTML='';
-  pendingAttachmentUrl=null;
-  attachmentUploading=false;
+  clearStagedPhoto();
+  isSubmitting=false;
+  setSubmitBusy(false);
   showModalEl('expense-modal');
+}
+function clearStagedPhoto(){
+  stagedPhotoName=null;stagedPhotoType=null;stagedPhotoDataUrl=null;
+  const p=document.getElementById('exp-f-preview');
+  if(p)p.innerHTML='';
+  const f=document.getElementById('exp-f-file');
+  if(f)f.value='';
 }
 function handleExpenseFileSelect(inputEl){
   const input=inputEl||document.getElementById('exp-f-file');
   const file=input.files&&input.files[0];
-  if(!file){document.getElementById('exp-f-preview').innerHTML='';pendingAttachmentUrl=null;return;}
-  uploadExpenseFile(file);
+  if(!file){clearStagedPhoto();return;}
+  stageExpenseFile(file);
 }
-function uploadExpenseFile(file){
-  const preview=document.getElementById('exp-f-preview');
-  pendingAttachmentUrl=null;
+function stageExpenseFile(file){
   if(!file.type.startsWith('image/')){toast('请选择图片文件','warn');return;}
   if(file.size>5*1024*1024){toast('图片过大，请选择 5MB 以内的图片','warn');return;}
   const reader=new FileReader();
   reader.onload=function(ev){
-    const dataUrl=ev.target.result;
-    const base64=dataUrl.split(',')[1];
-    preview.innerHTML=`<div class="flex-row" style="gap:8px"><img src="${dataUrl}" style="max-width:80px;max-height:80px;border-radius:var(--radius-sm);border:1px solid var(--border)"><span style="font-size:12px;color:var(--text-3)"><i class="ti ti-loader-2"></i> 正在上传到 Google Drive…</span></div>`;
-    attachmentUploading=true;
-    fetch(DRIVE_UPLOAD_URL,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({secret:DRIVE_UPLOAD_SECRET,filename:file.name,mimeType:file.type,data:base64})
-    }).then(r=>r.json()).then(res=>{
-      attachmentUploading=false;
-      if(res.ok){
-        pendingAttachmentUrl=res.url;
-        preview.innerHTML=`<div class="flex-row" style="gap:8px"><img src="${dataUrl}" style="max-width:80px;max-height:80px;border-radius:var(--radius-sm);border:1px solid var(--border)"><span style="font-size:12px;color:var(--green)"><i class="ti ti-check"></i> 已上传到 Google Drive</span></div>`;
-      }else{
-        preview.innerHTML=`<span style="font-size:12px;color:var(--red)">上传失败：${res.error||'未知错误'}</span>`;
-        toast('上传失败：'+(res.error||'未知错误'),'warn');
-      }
-    }).catch(()=>{
-      attachmentUploading=false;
-      preview.innerHTML=`<span style="font-size:12px;color:var(--red)">上传失败，请检查网络</span>`;
-      toast('上传失败，请检查网络','warn');
-    });
+    stagedPhotoDataUrl=ev.target.result;
+    stagedPhotoName=file.name;
+    stagedPhotoType=file.type;
+    document.getElementById('exp-f-preview').innerHTML=
+      `<div class="flex-row" style="gap:8px">
+        <img src="${stagedPhotoDataUrl}" style="max-width:80px;max-height:80px;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--text-3)">已选好照片，按「提交」后才会上传</div>
+        <button type="button" class="btn btn-sm" onclick="clearStagedPhoto()"><i class="ti ti-x"></i> 移除</button>
+      </div>`;
   };
   reader.readAsDataURL(file);
+}
+function setSubmitBusy(busy){
+  const btn=document.getElementById('exp-submit-btn');
+  if(!btn)return;
+  btn.disabled=busy;
+  btn.style.opacity=busy?'0.6':'';
+  btn.innerHTML=busy
+    ?'<i class="ti ti-loader-2"></i> 上传中…'
+    :'<i class="ti ti-check"></i> 提交';
+}
+// 上传暂存的照片，成功回传网址；没照片则回传 null
+function uploadStagedPhoto(){
+  if(!stagedPhotoDataUrl)return Promise.resolve(null);
+  return fetch(DRIVE_UPLOAD_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({
+      secret:DRIVE_UPLOAD_SECRET,
+      filename:stagedPhotoName,
+      mimeType:stagedPhotoType,
+      data:stagedPhotoDataUrl.split(',')[1]
+    })
+  }).then(r=>r.json()).then(res=>{
+    if(!res.ok)throw new Error(res.error||'未知错误');
+    return res.url;
+  });
 }
 
 /* ============ Camera capture (getUserMedia — works with a desktop webcam or phone camera) ============ */
@@ -645,23 +666,38 @@ function useCapturedPhoto(){
   canvas.toBlob(blob=>{
     const file=new File([blob],'camera-'+Date.now()+'.jpg',{type:'image/jpeg'});
     closeCameraCapture();
-    uploadExpenseFile(file);
+    stageExpenseFile(file);
   },'image/jpeg',0.9);
 }
 function saveExpense(){
-  if(attachmentUploading){toast('图片还在上传中，请稍候','warn');return;}
+  if(isSubmitting)return;
   const amount=Number(document.getElementById('exp-f-amount').value);
   if(!amount){toast('请填写金额','warn');return;}
   const dateVal=document.getElementById('exp-f-date').value;
-  expenses.unshift({
-    id:'exp'+Date.now(),
-    staffId:document.getElementById('exp-f-staff').value,
-    date:dateVal?dateVal.slice(5).replace('-','.'):todayShort(),
-    category:document.getElementById('exp-f-category').value,
-    desc:document.getElementById('exp-f-desc').value.trim()||'—',
-    amount,status:'待审批',attachmentUrl:pendingAttachmentUrl
+  const staffId=document.getElementById('exp-f-staff').value;
+  const category=document.getElementById('exp-f-category').value;
+  const desc=document.getElementById('exp-f-desc').value.trim()||'—';
+
+  isSubmitting=true;
+  setSubmitBusy(true);
+  return uploadStagedPhoto().then(url=>{
+    expenses.unshift({
+      id:'exp'+Date.now(),
+      staffId,
+      date:dateVal?dateVal.slice(5).replace('-','.'):todayShort(),
+      category,desc,amount,
+      status:'待审批',attachmentUrl:url
+    });
+    saveStore();renderExpenseTable();
+    clearStagedPhoto();
+    isSubmitting=false;setSubmitBusy(false);
+    closeModal('expense-modal');
+    toast('报销已提交，等待审批','success');
+  }).catch(err=>{
+    // 照片没传成功就不建立记录，避免留下没有凭证的单
+    isSubmitting=false;setSubmitBusy(false);
+    toast('照片上传失败，报销未提交：'+err.message,'warn');
   });
-  saveStore();renderExpenseTable();closeModal('expense-modal');toast('报销已提交，等待审批','success');
 }
 function viewExpense(id){
   const e=expenses.find(x=>x.id===id);if(!e)return;
