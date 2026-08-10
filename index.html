@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>报销记录 — MJPRO Beauty</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -131,14 +131,19 @@ tbody tr:hover td{background:#FAFAF8}
   table tbody tr:hover td{background:transparent}
   /* 表单一行一栏 */
   .form-row{grid-template-columns:1fr;gap:0}
-  /* 弹窗：让整个遮罩层滚动，避免底部按钮被手机网址列挡住 */
-  .modal-overlay{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-  .modal{width:100%!important;max-width:100%;max-height:none;overflow:visible;border-radius:0}
-  /* 底部按钮列改成一般排版，不再吸底（吸底在手机上会盖住内容）*/
-  .modal-footer{position:static;padding-bottom:calc(13px + env(safe-area-inset-bottom,0px))}
-  .modal-header{padding-top:calc(16px + env(safe-area-inset-top,0px))}
-  /* 拍照画面限制高度，免得整个弹窗被撑太长 */
-  #camera-video,#camera-shot-img{max-height:55vh;object-fit:contain}
+  /* 弹窗：填满屏幕，中间内容自己滚动，标题与按钮固定不动 */
+  .modal-overlay{align-items:stretch;overflow:hidden}
+  .modal{
+    width:100%!important;max-width:100%;border-radius:0;
+    height:100vh;height:100dvh;max-height:100dvh;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .modal-header{flex-shrink:0;position:static;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .modal-body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  /* 按钮列永远钉在底部，不会被切掉也不用滑 */
+  .modal-footer{flex-shrink:0;position:static;padding-bottom:calc(13px + env(safe-area-inset-bottom,0px))}
+  /* 拍照画面限制高度，免得把内容区撑爆 */
+  #camera-video,#camera-shot-img{max-height:50vh;object-fit:contain}
   .toast-wrap{top:10px;right:10px;left:10px}
   .toast{max-width:none}
 }
